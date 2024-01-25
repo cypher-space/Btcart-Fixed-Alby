@@ -1,9 +1,7 @@
-# ⚡ Lightning Widget
+# ⚡ BTCart Fixed Alby
 
-Start accepting Bitcoin payments on your website in minutes. Beautiful widgets, no fees, instant payouts.
+This Widget Accepts only alby payments and broadcasts the payment true trigger to enable content to become visible.
 
-## Demo
-➡️ [Website](https://widgets.twentyuno.net/) 
 
 ## Configuration options
  - `name`: The name being displayed on the widget
