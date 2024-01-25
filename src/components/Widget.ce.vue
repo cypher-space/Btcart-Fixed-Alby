@@ -1,15 +1,6 @@
 <template>
   <div v-cloak id="root" :style="cssProps">
     <canvas id="confetti" ref="confetti"></canvas>
-    <div class="logo">
-      <a href="https://widgets.twentyuno.net" target="_blank" rel="noreferer noopener">
-        <svg width="16" height="16" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg"
-          style="vertical-align: top">
-          <path class="map-fill-color"
-            d="M734.996 365.822C735.163 402.397 729.869 438.926 719.176 474.179C705.521 519.191 683.391 561.042 654.102 597.533C647.681 605.534 640.915 613.277 633.82 620.739L434.558 820H820V434.558L751.95 502.608C753.904 497.05 755.739 491.443 757.453 485.791C776.906 421.662 780.244 353.726 767.17 288C764.214 273.137 760.439 258.491 755.875 244.125L1000 0V1000H0L494.151 505.762C531.551 471.484 555 422.23 555 367.5C555 263.947 471.053 180 367.5 180C263.947 180 180 263.947 180 367.5C180 471.053 263.947 555 367.5 555C374.99 555 382.377 554.561 389.637 553.707L233.528 709.816C96.8161 656.27 0 523.191 0 367.5C0 164.535 164.535 0 367.5 0C569.905 0 734.092 163.629 734.996 365.822Z"
-            fill="#FFF" />
-        </svg></a>
-    </div>
     <div class="back">
       <a href="javascript:void(0)" @click="back()" v-if="step != 'start' && step != 'error' && step != 'thankyou'">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -47,7 +38,7 @@
               <div class="pill" v-bind:key="item.amount" v-for="item in amountList" @click="currentAmount = item.amount">{{
                 item.label }}</div>
             </div>
-            <input type="number" class="mb-1" name="amount" placeholder="Enter an amount" required
+            <input v-if="chooseamount" type="number" class="mb-1" name="amount" placeholder="Enter an amount" required
               v-model.number="currentAmount" />
           </div>
           <div>
@@ -83,40 +74,15 @@
             </g>
           </svg>
           <h4 class="mb-2">Waiting for payment with your browser wallet...</h4>
-          <a href="javascript:void(0)" @click="showQR()" v-if="paymentType == 'Invoice'">
-            <svg style="vertical-align: middle" width="20" height="20" viewBox="0 0 20 20" fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <rect class="map-stroke-color" x="3.75" y="3.75" width="3" height="3" stroke="white" stroke-width="1.5" />
-              <rect class="map-stroke-color" t x="13.2499" y="3.75" width="3" height="3" stroke="white"
-                stroke-width="1.5" />
-              <rect class="map-stroke-color" x="3.75" y="13.25" width="3" height="3" stroke="white" stroke-width="1.5" />
-              <rect class="map-fill-color" x="3" y="9.25" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="6" y="9.25" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="9.16663" y="9.25" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="9.16663" y="12.375" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="9.16663" y="15.5" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="9.16663" y="6.125" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="9.16663" y="3" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="12.3333" y="9.25" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="15.4999" y="9.25" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="12.3333" y="12.375" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="15.4999" y="12.375" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="12.3333" y="15.5" width="1.5" height="1.5" fill="white" />
-              <rect class="map-fill-color" x="15.4999" y="15.5" width="1.5" height="1.5" fill="white" />
-            </svg>
-            Use QR code
-          </a>
+
         </div>
         <div v-else-if="step == 'qr'">
-          <div class="mb-1">
-            <a :href="'lightning:' + paymentRequest">
-              <img class="qr" width="150" height="150" :src="'https://embed.twentyuno.net/qr/' + paymentRequest"
-                alt="qr" />
-            </a>
-          </div>
+
           <Transition name="fade" mode="out-in">
-            <h4 class="qr-heading" v-if="!qrTimeoutElapsed">Scan or Click to pay</h4>
-            <button v-else class="button" @click="step = 'thankyou'; celebrate()">Done?</button>
+            <div>
+              <p>Sorry it seems like something went wrong 😢</p>
+            <button class="button" @click="reset(); step = 'start'">Start over</button>
+            </div>
           </Transition>
         </div>
         <div v-else-if="step == 'thankyou'">
@@ -163,10 +129,15 @@ export default {
     // Debugging purposes only 
     debug: { type: Boolean, default: false },
     initialStep: { type: String, default: 'start' },
+
+    wizard: { type: Boolean, default: false },
+    freeamount: { type: Boolean, default: true },
   },
   data() {
     return {
       currentAmount: this.amount,
+      wizardkey: this.wizard,
+      chooseamount: this.freeamount,
       params: {},
       loading: false,
       paymentRequest: null,
@@ -256,6 +227,7 @@ export default {
           });
 
           this.step = 'thankyou';
+          this.wizardkey = true
           this.celebrate();
 
         } else {

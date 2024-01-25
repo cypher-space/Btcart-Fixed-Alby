@@ -1,6 +1,6 @@
 # ⚡ BTCart Fixed Alby
 
-This Widget Accepts only alby payments and broadcasts the payment true trigger to enable content to become visible.
+This Widget Accepts only alby payments and broadcasts the payment true (wizardkey) trigger to enable content to become visible.
 
 
 ## Configuration options
@@ -10,10 +10,12 @@ This Widget Accepts only alby payments and broadcasts the payment true trigger t
  - `accent`: An accent color in RGB format to make your widget more colorful (i.e. `#20C997`)
  - `button-text`: The text to be displayed on the initial state of the widget (default: `Donate sats`)
  - `debug`: Debug mode, validates settings during initialization and displays configuration errors
+ - `wizard`: false by default turns true when alby trigger is true
+ - `freeamount`: true by default enables a input field to enter your own amount of sats
 
 **Example**
 ```
-<lightning-widget 
+<lightning-fixed-alby-trigger 
     name="René Aaron" 
     accent="#20c997" 
     to="reneaaron@getalby.com" 
