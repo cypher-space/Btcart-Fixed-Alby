@@ -130,13 +130,13 @@ export default {
     debug: { type: Boolean, default: false },
     initialStep: { type: String, default: 'start' },
 
-    wizard: { type: Boolean, default: this.wizardkey },
+    wizard: { type: Boolean, default: false },
     freeamount: { type: Boolean, default: true },
   },
   data() {
     return {
       currentAmount: this.amount,
-      wizardkey: false,
+      wizardkey: this.wizard,
       chooseamount: this.freeamount,
       params: {},
       loading: false,
