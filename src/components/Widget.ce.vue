@@ -38,7 +38,7 @@
               <div class="pill" v-bind:key="item.amount" v-for="item in amountList" @click="currentAmount = item.amount">{{
                 item.label }}</div>
             </div>
-            <input v-if="chooseamount" type="number" class="mb-1" name="amount" placeholder="Enter an amount" required
+            <input type="number" class="mb-1" name="amount" placeholder="Enter an amount" required
               v-model.number="currentAmount" />
           </div>
           <div>
@@ -74,15 +74,39 @@
             </g>
           </svg>
           <h4 class="mb-2">Waiting for payment with your browser wallet...</h4>
-
+          <a href="javascript:void(0)" @click="showQR()" v-if="paymentType == 'Invoice'">
+            <svg style="vertical-align: middle" width="20" height="20" viewBox="0 0 20 20" fill="none"
+              xmlns="http://www.w3.org/2000/svg">
+              <rect class="map-stroke-color" x="3.75" y="3.75" width="3" height="3" stroke="white" stroke-width="1.5" />
+              <rect class="map-stroke-color" t x="13.2499" y="3.75" width="3" height="3" stroke="white"
+                stroke-width="1.5" />
+              <rect class="map-stroke-color" x="3.75" y="13.25" width="3" height="3" stroke="white" stroke-width="1.5" />
+              <rect class="map-fill-color" x="3" y="9.25" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="6" y="9.25" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="9.16663" y="9.25" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="9.16663" y="12.375" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="9.16663" y="15.5" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="9.16663" y="6.125" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="9.16663" y="3" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="12.3333" y="9.25" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="15.4999" y="9.25" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="12.3333" y="12.375" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="15.4999" y="12.375" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="12.3333" y="15.5" width="1.5" height="1.5" fill="white" />
+              <rect class="map-fill-color" x="15.4999" y="15.5" width="1.5" height="1.5" fill="white" />
+            </svg>
+            Use QR code
+          </a>
         </div>
         <div v-else-if="step == 'qr'">
-
+          <div class="mb-1">
+            <a :href="'lightning:' + paymentRequest">
+              <img :src="qrCodeDataUrl" class="qr" width="150" height="150" alt="QR Code" />
+            </a>
+          </div>
           <Transition name="fade" mode="out-in">
-            <div>
-              <p>Sorry it seems like something went wrong 😢</p>
-            <button class="button" @click="reset(); step = 'start'">Start over</button>
-            </div>
+            <h4 class="qr-heading" v-if="!qrTimeoutElapsed">Scan or Click to pay</h4>
+            <button v-else class="button" @click="step = 'thankyou'; celebrate()">Done?</button>
           </Transition>
         </div>
         <div v-else-if="step == 'thankyou'">
@@ -107,6 +131,7 @@
 <script>
 import JSConfetti from 'js-confetti'
 import { fetchInvoice, fetchParams, contrastingColor, luma, formatAmount } from './utils/helpers';
+import QRCode from 'qrcode';
 
 export default {
   name: "LightningWidget",
@@ -129,15 +154,10 @@ export default {
     // Debugging purposes only 
     debug: { type: Boolean, default: false },
     initialStep: { type: String, default: 'start' },
-
-    wizard: { type: Boolean, default: false },
-    freeamount: { type: Boolean, default: true },
   },
   data() {
     return {
       currentAmount: this.amount,
-      wizardkey: this.wizard,
-      chooseamount: this.freeamount,
       params: {},
       loading: false,
       paymentRequest: null,
@@ -146,6 +166,7 @@ export default {
       qrTimeoutElapsed: false,
       paymentType: 'Invoice',
       errorTitle: '',
+      qrCodeDataUrl: '',
       errorMessage: '',
       amountList: [],
     };
@@ -208,6 +229,16 @@ export default {
     },
     pay: async function () {
       await this['pay' + this.paymentType]();
+
+          QRCode.toDataURL(this.paymentRequest, (error, dataUrl) => {
+            if (error) {
+              console.error('Error generating QR code:', error);
+            } else {
+              this.qrCodeDataUrl = dataUrl;
+            }
+          });
+
+
     },
     payKeysend: async function () {
       let error = false;
@@ -227,7 +258,6 @@ export default {
           });
 
           this.step = 'thankyou';
-          this.wizardkey = true
           this.celebrate();
 
         } else {
@@ -254,7 +284,7 @@ export default {
         // Fetch invoice
         try {
           invoice = await fetchInvoice(this.to || this.address, this.currentAmount, this.comment);
-          this.paymentRequest = invoice.payment_request;
+          this.paymentRequest = invoice.invoice.pr;
         }
         catch (e) {
           this.error('Sorry', 'An error happend during the payment. Try again?');
@@ -265,7 +295,7 @@ export default {
         webln = window.webln;
         if (webln) {
           await webln.enable();
-          await webln.sendPayment(invoice.payment_request);
+          await webln.sendPayment(invoice.invoice.pr);
 
           this.step = 'thankyou';
           this.celebrate();
@@ -525,8 +555,7 @@ select {
   border-radius: 25px;
   color: var(--color);
   padding: 25px;
-  background-color: var(--accent);
-  min-height: 268px;
+  min-height: 290px;
   display: flex;
   justify-content: center;
   align-items: center;
