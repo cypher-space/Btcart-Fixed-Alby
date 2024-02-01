@@ -100,12 +100,22 @@
         </div>
         <div v-else-if="step == 'qr'">
           <div class="mb-1">
-            <a :href="'lightning:' + paymentRequest">
-              <img :src="qrCodeDataUrl" class="qr" width="150" height="150" alt="QR Code" />
-            </a>
+
+            
           </div>
           <Transition name="fade" mode="out-in">
-            <h4 class="qr-heading" v-if="!qrTimeoutElapsed">Scan or Click to pay</h4>
+            <div v-if="!qrTimeoutElapsed">
+
+            <h1 class="qr-heading"> Something went Wrong 😢</h1>
+            <!-- <a :href="'lightning:' + paymentRequest">
+              <img :src="qrCodeDataUrl" class="qr" width="150" height="150" alt="QR Code" />
+            </a> -->
+            <div>
+            <button class="button" @click="reset(); step = 'start'">Start over</button>
+          </div>
+            </div>
+
+
             <button v-else class="button" @click="step = 'thankyou'; celebrate()">Done?</button>
           </Transition>
         </div>
@@ -137,7 +147,7 @@ export default {
   name: "LightningWidget",
   props: {
     name: { type: String, required: true },
-    to: { type: String, required: true, default: "reneaaron@getalby.com" },
+    to: { type: String, required: true, default: "osmu@strike.me" },
 
     amounts: { type: String, required: false, default: "10,100,1000" },
     labels: { type: String, required: false },
@@ -149,7 +159,7 @@ export default {
     backgroundImage: { type: String, default: null },
 
     // Deprecated --> use `to`
-    address: { type: String, required: false, default: "reneaaron@getalby.com" },
+    address: { type: String, required: false, default: "osmu@strike.me" },
 
     // Debugging purposes only 
     debug: { type: Boolean, default: false },
